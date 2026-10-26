@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState, Suspense } from "react";
 import { useParams } from "next/navigation";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
 type Album = {
@@ -21,6 +20,7 @@ function AlbumDetailContent() {
     const { id } = useParams<{ id: string }>();
     const [album, setAlbum] = useState<Album | null>(null);
     const [message, setMessage] = useState("読み込み中...");
+    const [inviteCode, setInviteCode] = useState<string | null>(null);
 
     useEffect(() => {
         async function loadAlbum() {
@@ -45,18 +45,53 @@ function AlbumDetailContent() {
         void loadAlbum();
     }, [id]);
 
+    // 招待コード
+    async function handleInvite() {
+        setMessage("");
+        const supabase = createClient();
+        const { data, error } = await supabase.rpc(
+            "create_couple_invite",
+            { p_couple_id: id }
+        );
+
+        if (error) {
+            console.error(`招待コード発行エラー:${error.message}`);
+            return
+        }
+        setInviteCode(data)
+    }
+
     return (
         <main>
-            {album ? (
-                <>
-                    <h1>{album.name}</h1>
-                    <p>共有アルバムを作成しました！</p>
-                    <p>次はここに写真やデートの感想を保存できるようにします。</p>
-                </>
-            ) : (
-                <p>{message}</p>
-            )}
-            <Link href="/album">アルバム一覧に戻る</Link>
+            <h1>{album?.name ?? "共有アルバム"}</h1>
+            {message && <p role="status">{message}</p>}
+            <section>
+                <h2>パートナーを招待</h2>
+                <button onClick={handleInvite}>
+                    招待コードを発行する
+                </button>
+                {inviteCode && (
+                    <div>
+                        <p>このコードをパートナーに共有してください。</p>
+                        <p>
+                            <strong>{inviteCode}</strong>
+                        </p>
+                        <button
+                            onClick={() => {
+                                void navigator.clipboard.writeText(inviteCode);
+                                setMessage("招待コードをコピーしました。");
+                            }}
+                        >
+                            招待コードをコピー
+                        </button>
+                        <p>
+                            パートナーは
+                            <a href="/join">こちらから参加</a>
+                            できます。
+                        </p>
+                    </div>
+                )}
+            </section>
         </main>
     );
 }
