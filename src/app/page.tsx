@@ -1,5 +1,4 @@
 "use client";
-
 import styles from "./page.module.css";
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -93,13 +92,16 @@ export default function Home() {
               <ul>
                 {couples.map((couple) => (
                   <li key={couple.id}>
-                    <Link href={`/couples/${couple.id}`}>
+                    <Link href={`/album/${couple.id}`}>
                       {couple.name}
                     </Link>
                   </li>
                 ))}
               </ul>
             )}
+            <Link href="/join">
+              <p>招待コードで参加</p>
+            </Link>
           </section>
         </>
       )}
